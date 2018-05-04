@@ -1,35 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:id="@+id/rootLayout">
+    tools:context=".MainActivity">
 
-    <SeekBar android:layout_width="match_parent"
+    <RelativeLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/seekBar"
-        android:min="0"
-        android:max="100"
         android:layout_centerInParent="true"
-        android:layout_margin="20dp"/>
+        android:background="#000000">
 
-    <Switch android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/wifiSwitch"
-        android:layout_below="@+id/seekBar"
-        android:text="Wifi"/>
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:max="100"
+            android:min="0"
+            />
 
-    <Switch android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/bluetoothSwitch"
-        android:layout_below="@+id/wifiSwitch"
-        android:text="Bluetoot"/>
+        <Switch
+            android:id="@+id/wifiSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/seekBar"
+            android:text="Wifi"
+            android:layout_margin="20dp" />
 
-    <Switch android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/ringtoneSwich"
-        android:layout_below="@+id/bluetoothSwitch"
-        android:text="Ringtone"/>
+        <Switch
+            android:id="@+id/bluetoothSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/wifiSwitch"
+            android:text="Bluetoot"
+            android:layout_margin="20dp"/>
+
+        <Switch
+            android:id="@+id/ringtoneSwich"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/bluetoothSwitch"
+            android:text="Ringtone"
+            android:layout_margin="20dp"/>
+    </RelativeLayout>
 
 </RelativeLayout>
