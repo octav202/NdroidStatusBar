@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -19,13 +20,20 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
+    private int SETTINGS_HEIGHT = 400;
     private int BAR_HEIGHT = 90;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN  = 25;
     private int ICON_MARGIN_END = 50;
+    private int SETTINGS_TOP_MARGIN = -400;
 
+    // Settings
     private RelativeLayout mSettingsLayout;
+    private int mSettingsLayoutId = 5;
+
+    // StatusBar
     private RelativeLayout mIconLayout;
+    private int mIconLayoutId = 6;
 
     // Carrier
     private TextView mCarrier;
@@ -53,6 +61,11 @@ public class NdroidStatusBar extends RelativeLayout {
     private static final int OFF = 2;
     private static final int VIBRATE = 3;
 
+    // Touch Events
+    private float mStartPoint;
+    private int mOffset =0;
+    private static final int MIN_OFFSET = -400;
+    private static final int MAX_OFFSET = 400;
 
     public NdroidStatusBar(Context context) {
         super(context);
@@ -63,21 +76,32 @@ public class NdroidStatusBar extends RelativeLayout {
         initSettingsLayout();
         initIconLayout();
 
-        setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, SETTINGS_TOP_MARGIN, 0 ,0);
+        setLayoutParams(params);
+        setBackgroundColor(Color.TRANSPARENT);
         addView(mSettingsLayout);
         addView(mIconLayout);
     }
 
+    // Init Settings Layout
     private void initSettingsLayout() {
         mSettingsLayout = new RelativeLayout(mContext);
+        LayoutParams params  = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, SETTINGS_HEIGHT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+        mSettingsLayout.setLayoutParams(params);
+        mSettingsLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.status_bar_background));
+        mSettingsLayout.setId(mSettingsLayoutId);
     }
 
-
+    // Init Status Bar Layout
     private void initIconLayout() {
         RelativeLayout.LayoutParams iparam= new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, BAR_HEIGHT);
+        iparam.addRule(RelativeLayout.BELOW, mSettingsLayoutId);
         mIconLayout = new RelativeLayout(mContext);
         mIconLayout.setLayoutParams(iparam);
-        setBackground(ContextCompat.getDrawable(mContext, R.drawable.status_bar_shape));
+        mIconLayout.setId(mIconLayoutId);
+        mIconLayout.setBackground(ContextCompat.getDrawable(mContext, R.drawable.status_bar_shape));
 
 
         // Battery Level
@@ -163,7 +187,6 @@ public class NdroidStatusBar extends RelativeLayout {
         } else {
             mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_red));
         }
-
         mIconLayout.addView(mBatteryView);
 
         // Brint text and icons on top of battery level
@@ -213,6 +236,98 @@ public class NdroidStatusBar extends RelativeLayout {
         mWifi.bringToFront();
         mRingtone.bringToFront();
         mBluetooth.bringToFront();
+    }
+
+    /**
+     * Touch Events
+     */
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mStartPoint = event.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                Log.d(TAG, "ACTION_UP Offset =" + mOffset);
+
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+                int margin = params.topMargin;
+
+                // Expand
+                if (mOffset >= 70) {
+                    mOffset = 0;
+                    expandStatusBar();
+                }
+
+                // Collapse
+                if (mOffset <= -70) {
+                    mOffset = MIN_OFFSET;
+                    collapseStatusBar();
+                }
+
+                // Reset values
+                mStartPoint = 0;
+                mOffset = 0;
+
+                break;
+            case MotionEvent.ACTION_MOVE:
+                mOffset = Math.round(event.getY() - mStartPoint);
+                // Check Offset limits
+                if (mOffset < MIN_OFFSET) {
+                    mOffset = MIN_OFFSET;
+                } else if (mOffset >= MAX_OFFSET) {
+                    mOffset = MAX_OFFSET;
+                }
+                Log.d(TAG, "ACTION_MOVE Offset =" + mOffset);
+                updateLayoutOffset(mOffset);
+                break;
+        }
+
+        return true;
+    }
+
+    /**
+     * Update StatusBarLayout - Expand/Collapse
+     * @param offset
+     */
+    private void updateLayoutOffset(int offset) {
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        int margin = params.topMargin;
+
+        margin += offset;
+        if (margin < MIN_OFFSET) {
+            margin = MIN_OFFSET;
+        } else if (mOffset >= MAX_OFFSET) {
+            margin = MAX_OFFSET;
+        }
+
+        params.setMargins(0,margin,0,0);
+        setLayoutParams(params);
+        requestLayout();
+    }
+
+    /**
+     * Expand Status Bar and show Settings.
+     */
+    private void expandStatusBar() {
+        Log.d(TAG, "expandStatusBar()");
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        params.setMargins(0,0,0,0);
+        setLayoutParams(params);
+        requestLayout();
+    }
+
+    /**
+     * Collapse Status bar and hide Settings.
+     */
+    private void collapseStatusBar() {
+        Log.d(TAG, "collapseStatusBar()");
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        params.setMargins(0,SETTINGS_TOP_MARGIN,0,0);
+        setLayoutParams(params);
+        requestLayout();
     }
 
     // Mandatory Constructors
