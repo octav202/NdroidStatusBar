@@ -26,14 +26,14 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
-    private int SETTINGS_HEIGHT = 500;
+    private int SETTINGS_HEIGHT = 700;
     private int BAR_HEIGHT = 90;
     private int BUTTON_MARGIN = 55;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN = 25;
     private int ICON_MARGIN_END = 50;
-    private int SETTINGS_TOP_MARGIN_COLLAPSED = -500;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -700;
     private int LAYOUT_MARGIN = 15;
 
     // [_____ Settings _____]
@@ -47,12 +47,18 @@ public class NdroidStatusBar extends RelativeLayout {
     private Button mRingtoneButton;
     private Button mBluetoothButton;
     private Button mOrientationButton;
+    private Button mLocationButton;
+    private Button mNfcButton;
+    private Button mAirplaneButton;
     private int BUTTONS_LAYOUT_ID = 10;
     private int WIFI_BUTTON_ID = 101;
     private int MOBILE_DATA_BUTTON_ID = 102;
     private int RINGTONE_BUTTON_ID = 103;
     private int BLUETOOTH_BUTTON_ID = 104;
     private int ORIENTATION_BUTTON_ID = 105;
+    private int LOCATION_BUTTON_ID = 106;
+    private int NFC_BUTTON_ID = 107;
+    private int AIRPLANE_BUTTON_ID = 108;
    
     
     
@@ -104,8 +110,8 @@ public class NdroidStatusBar extends RelativeLayout {
     // Touch Events
     private float mStartPoint;
     private int mOffset = 0;
-    private static final int MIN_OFFSET = -500;
-    private static final int MAX_OFFSET = 500;
+    private static final int MIN_OFFSET = -700;
+    private static final int MAX_OFFSET = 700;
 
     public NdroidStatusBar(Context context) {
         super(context);
@@ -141,8 +147,9 @@ public class NdroidStatusBar extends RelativeLayout {
     private void initButtonsLayout() {
         // Buttons Layout
         mButtonsLayout = new RelativeLayout(mContext);
-        RelativeLayout.LayoutParams buttonsParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams buttonsParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         buttonsParams.setMargins(LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN);
+        buttonsParams.addRule(CENTER_HORIZONTAL, TRUE);
         mButtonsLayout.setLayoutParams(buttonsParams);
         mButtonsLayout.setBackgroundColor(Color.TRANSPARENT);
         mButtonsLayout.setId(BUTTONS_LAYOUT_ID);
@@ -154,7 +161,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mWifiButton.setLayoutParams(wParams);
         wParams.setMarginStart(BUTTON_MARGIN);
         wParams.setMarginEnd(BUTTON_MARGIN);
-        wParams.addRule(START_OF, MOBILE_DATA_BUTTON_ID);
+        wParams.addRule(ALIGN_PARENT_START, TRUE);
         mWifiButton.setTextColor(Color.BLACK);
         mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
         mWifiButton.setGravity(Gravity.CENTER);
@@ -166,7 +173,7 @@ public class NdroidStatusBar extends RelativeLayout {
         RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         mParams.setMarginStart(BUTTON_MARGIN);
         mParams.setMarginEnd(BUTTON_MARGIN);
-        mParams.addRule(START_OF, RINGTONE_BUTTON_ID);
+        mParams.addRule(END_OF, WIFI_BUTTON_ID);
         mMobileDataButton.setLayoutParams(mParams);
         mMobileDataButton.setTextColor(Color.BLACK);
         mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data));
@@ -178,7 +185,7 @@ public class NdroidStatusBar extends RelativeLayout {
         RelativeLayout.LayoutParams rParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         rParams.setMarginStart(BUTTON_MARGIN);
         rParams.setMarginEnd(BUTTON_MARGIN);
-        rParams.addRule(CENTER_IN_PARENT, TRUE);
+        rParams.addRule(END_OF, MOBILE_DATA_BUTTON_ID);
         mRingtoneButton.setLayoutParams(rParams);
         mRingtoneButton.setTextColor(Color.BLACK);
         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
@@ -200,13 +207,49 @@ public class NdroidStatusBar extends RelativeLayout {
         mOrientationButton = new Button(mContext);
         mOrientationButton.setId(ORIENTATION_BUTTON_ID);
         RelativeLayout.LayoutParams oParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
-        oParams.setMarginStart(BUTTON_MARGIN);
-        oParams.setMarginEnd(BUTTON_MARGIN);
-        oParams.addRule(END_OF, BLUETOOTH_BUTTON_ID);
+        oParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
+        oParams.addRule(BELOW, WIFI_BUTTON_ID);
+        oParams.addRule(ALIGN_PARENT_START, TRUE);
         mOrientationButton.setLayoutParams(oParams);
         mOrientationButton.setTextColor(Color.BLACK);
         mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation_black));
         mButtonsLayout.addView(mOrientationButton);
+
+        // Location
+        mLocationButton = new Button(mContext);
+        mLocationButton.setId(LOCATION_BUTTON_ID);
+        RelativeLayout.LayoutParams locParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        locParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
+        locParams.addRule(BELOW, MOBILE_DATA_BUTTON_ID);
+        locParams.addRule(END_OF, ORIENTATION_BUTTON_ID);
+        mLocationButton.setLayoutParams(locParams);
+        mLocationButton.setTextColor(Color.BLACK);
+        mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location));
+        mButtonsLayout.addView(mLocationButton);
+
+        // NFC
+        mNfcButton = new Button(mContext);
+        mNfcButton.setId(NFC_BUTTON_ID);
+        RelativeLayout.LayoutParams nParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        nParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
+        nParams.addRule(END_OF, LOCATION_BUTTON_ID);
+        nParams.addRule(BELOW, RINGTONE_BUTTON_ID);
+        mNfcButton.setLayoutParams(nParams);
+        mNfcButton.setTextColor(Color.BLACK);
+        mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc_black));
+        mButtonsLayout.addView(mNfcButton);
+
+        // Airplane
+        mAirplaneButton = new Button(mContext);
+        mAirplaneButton.setId(AIRPLANE_BUTTON_ID);
+        RelativeLayout.LayoutParams aParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        aParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
+        aParams.addRule(BELOW, BLUETOOTH_BUTTON_ID);
+        aParams.addRule(END_OF, NFC_BUTTON_ID);
+        mAirplaneButton.setLayoutParams(aParams);
+        mAirplaneButton.setTextColor(Color.BLACK);
+        mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode));
+        mButtonsLayout.addView(mAirplaneButton);
 
         mSettingsLayout.addView(mButtonsLayout);
     }
