@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -27,25 +28,34 @@ public class NdroidStatusBar extends RelativeLayout {
     // Dimensions
     private int SETTINGS_HEIGHT = 500;
     private int BAR_HEIGHT = 90;
-    private int BUTTON_MARGIN = 10;
+    private int BUTTON_MARGIN = 55;
+    private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN = 25;
     private int ICON_MARGIN_END = 50;
     private int SETTINGS_TOP_MARGIN_COLLAPSED = -500;
+    private int LAYOUT_MARGIN = 15;
 
     // [_____ Settings _____]
     private RelativeLayout mSettingsLayout;
     private int mSettingsLayoutId = 5;
 
     // Buttons
-    private LinearLayout mButtonsLayout;
-    private int mButtonsLayoutId = 10;
+    private RelativeLayout mButtonsLayout;
     private Button mWifiButton;
     private Button mMobileDataButton;
     private Button mRingtoneButton;
     private Button mBluetoothButton;
     private Button mOrientationButton;
-
+    private int BUTTONS_LAYOUT_ID = 10;
+    private int WIFI_BUTTON_ID = 101;
+    private int MOBILE_DATA_BUTTON_ID = 102;
+    private int RINGTONE_BUTTON_ID = 103;
+    private int BLUETOOTH_BUTTON_ID = 104;
+    private int ORIENTATION_BUTTON_ID = 105;
+   
+    
+    
     // Brightness
     private RelativeLayout mBrightnessLayout;
     private int mBrightnessLayoutId = 11;
@@ -67,30 +77,23 @@ public class NdroidStatusBar extends RelativeLayout {
     private TextView mRingtoneText;
 
     // [_____ Status Bar _____] //
-
-    // StatusBar
     private RelativeLayout mIconLayout;
     private int mIconLayoutId = 6;
 
     // Carrier
     private TextView mCarrier;
-
     // Battery
     private int mBatteryLevel = 100;
     private View mBatteryView;
-
     // Clock
     private TextView mClockText;
     private int mClockId = 1;
-
     // Wifi
     private View mWifiIcon;
     private int mWifiIconId = 2;
-
     // Bluetooth
     private View mBluetoothIcon;
     private int mBluetoothIconId = 3;
-
     // Ringtone
     private View mRingtoneIcon;
     private int mRingtoneIconId = 4;
@@ -137,75 +140,74 @@ public class NdroidStatusBar extends RelativeLayout {
 
     private void initButtonsLayout() {
         // Buttons Layout
-        mButtonsLayout = new LinearLayout(mContext);
-        LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        mButtonsLayout.setLayoutParams(lParams);
-        mButtonsLayout.setOrientation(HORIZONTAL);
-        mButtonsLayout.setWeightSum(5);
-        mButtonsLayout.setId(mButtonsLayoutId);
+        mButtonsLayout = new RelativeLayout(mContext);
+        RelativeLayout.LayoutParams buttonsParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        buttonsParams.setMargins(LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN);
+        mButtonsLayout.setLayoutParams(buttonsParams);
+        mButtonsLayout.setId(BUTTONS_LAYOUT_ID);
 
         // Wifi
         mWifiButton = new Button(mContext);
-        mWifiButton.setText("WI");
-        LinearLayout.LayoutParams wParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
+        mWifiButton.setId(WIFI_BUTTON_ID);
+        RelativeLayout.LayoutParams wParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         mWifiButton.setLayoutParams(wParams);
         wParams.setMarginStart(BUTTON_MARGIN);
         wParams.setMarginEnd(BUTTON_MARGIN);
-        wParams.weight = 1;
+        wParams.addRule(START_OF, MOBILE_DATA_BUTTON_ID);
         mWifiButton.setTextColor(Color.BLACK);
-        mWifiButton.setBackgroundColor(Color.TRANSPARENT);
+        mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
+        mWifiButton.setGravity(Gravity.CENTER);
         mButtonsLayout.addView(mWifiButton);
 
         // Mobile Data
         mMobileDataButton = new Button(mContext);
-        mMobileDataButton.setText("MD");
-        LinearLayout.LayoutParams mParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
+        mMobileDataButton.setId(MOBILE_DATA_BUTTON_ID);
+        RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        mParams.setMarginStart(BUTTON_MARGIN);
         mParams.setMarginEnd(BUTTON_MARGIN);
-        mParams.weight = 1;
+        mParams.addRule(START_OF, RINGTONE_BUTTON_ID);
         mMobileDataButton.setLayoutParams(mParams);
         mMobileDataButton.setTextColor(Color.BLACK);
-        mMobileDataButton.setBackgroundColor(Color.TRANSPARENT);
+        mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
         mButtonsLayout.addView(mMobileDataButton);
 
         // Ringtone
         mRingtoneButton = new Button(mContext);
-        mRingtoneButton.setText("RING");
-        LinearLayout.LayoutParams rParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
+        mRingtoneButton.setId(RINGTONE_BUTTON_ID);
+        RelativeLayout.LayoutParams rParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        rParams.setMarginStart(BUTTON_MARGIN);
         rParams.setMarginEnd(BUTTON_MARGIN);
-        rParams.weight = 1;
+        rParams.addRule(CENTER_IN_PARENT, TRUE);
         mRingtoneButton.setLayoutParams(rParams);
         mRingtoneButton.setTextColor(Color.BLACK);
-        mRingtoneButton.setBackgroundColor(Color.TRANSPARENT);
+        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
         mButtonsLayout.addView(mRingtoneButton);
 
         // Bluetooth
         mBluetoothButton = new Button(mContext);
-        mBluetoothButton.setText("BT");
-        LinearLayout.LayoutParams bParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
+        mBluetoothButton.setId(BLUETOOTH_BUTTON_ID);
+        RelativeLayout.LayoutParams bParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        bParams.setMarginStart(BUTTON_MARGIN);
         bParams.setMarginEnd(BUTTON_MARGIN);
-        bParams.weight = 1;
+        bParams.addRule(END_OF, RINGTONE_BUTTON_ID);
         mBluetoothButton.setLayoutParams(bParams);
         mBluetoothButton.setTextColor(Color.BLACK);
-        mBluetoothButton.setBackgroundColor(Color.TRANSPARENT);
+        mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_yes));
         mButtonsLayout.addView(mBluetoothButton);
 
         // Screen Rotation
         mOrientationButton = new Button(mContext);
-        mOrientationButton.setText("SC");
-        LinearLayout.LayoutParams oParams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
+        mOrientationButton.setId(ORIENTATION_BUTTON_ID);
+        RelativeLayout.LayoutParams oParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        oParams.setMarginStart(BUTTON_MARGIN);
         oParams.setMarginEnd(BUTTON_MARGIN);
-        oParams.weight = 1;
+        oParams.addRule(END_OF, BLUETOOTH_BUTTON_ID);
         mOrientationButton.setLayoutParams(oParams);
         mOrientationButton.setTextColor(Color.BLACK);
-        mOrientationButton.setBackgroundColor(Color.TRANSPARENT);
+        mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
         mButtonsLayout.addView(mOrientationButton);
-        mSettingsLayout.addView(mButtonsLayout);
 
+        mSettingsLayout.addView(mButtonsLayout);
     }
 
     private void initBrightnessLayout() {
@@ -215,8 +217,8 @@ public class NdroidStatusBar extends RelativeLayout {
         mBrightnessLayout.setBackgroundColor(Color.TRANSPARENT);
         RelativeLayout.LayoutParams brParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
-        brParams.addRule(BELOW, mButtonsLayoutId);
-        brParams.setMargins(ICON_MARGIN, ICON_MARGIN, ICON_MARGIN, 0);
+        brParams.addRule(BELOW, BUTTONS_LAYOUT_ID);
+        brParams.setMargins(LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN);
         mBrightnessLayout.setLayoutParams(brParams);
 
         // Brightness Start Icon
@@ -225,7 +227,7 @@ public class NdroidStatusBar extends RelativeLayout {
         brStartParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
         brStartParams.setMarginStart(ICON_MARGIN);
         mBrightnessStart.setLayoutParams(brStartParams);
-        mBrightnessStart.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+        mBrightnessStart.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_brightness_low));
         mBrightnessStart.setId(mBrightnessStartId);
         mBrightnessLayout.addView(mBrightnessStart);
 
@@ -235,7 +237,7 @@ public class NdroidStatusBar extends RelativeLayout {
         brEndParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
         brEndParams.setMarginEnd(ICON_MARGIN);
         mBrightnessEnd.setLayoutParams(brEndParams);
-        mBrightnessEnd.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+        mBrightnessEnd.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_brightness_high));
         mBrightnessEnd.setId(mBrightnessEndId);
         mBrightnessLayout.addView(mBrightnessEnd);
 
@@ -272,7 +274,7 @@ public class NdroidStatusBar extends RelativeLayout {
         RelativeLayout.LayoutParams rParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
         rParams.addRule(BELOW, mBrightnessLayoutId);
-        rParams.setMargins(ICON_MARGIN, 0, ICON_MARGIN, 0);
+        rParams.setMargins(LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN);
         mRingtoneLayout.setLayoutParams(rParams);
 
         // Ringtone Start Icon
