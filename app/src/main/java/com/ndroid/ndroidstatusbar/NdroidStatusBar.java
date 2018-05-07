@@ -144,6 +144,7 @@ public class NdroidStatusBar extends RelativeLayout {
         RelativeLayout.LayoutParams buttonsParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         buttonsParams.setMargins(LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN);
         mButtonsLayout.setLayoutParams(buttonsParams);
+        mButtonsLayout.setBackgroundColor(Color.TRANSPARENT);
         mButtonsLayout.setId(BUTTONS_LAYOUT_ID);
 
         // Wifi
@@ -168,7 +169,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mParams.addRule(START_OF, RINGTONE_BUTTON_ID);
         mMobileDataButton.setLayoutParams(mParams);
         mMobileDataButton.setTextColor(Color.BLACK);
-        mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
+        mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data));
         mButtonsLayout.addView(mMobileDataButton);
 
         // Ringtone
@@ -204,7 +205,7 @@ public class NdroidStatusBar extends RelativeLayout {
         oParams.addRule(END_OF, BLUETOOTH_BUTTON_ID);
         mOrientationButton.setLayoutParams(oParams);
         mOrientationButton.setTextColor(Color.BLACK);
-        mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+        mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation_black));
         mButtonsLayout.addView(mOrientationButton);
 
         mSettingsLayout.addView(mButtonsLayout);
