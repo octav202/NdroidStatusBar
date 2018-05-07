@@ -25,7 +25,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private int ICON_SIZE = 60;
     private int ICON_MARGIN  = 25;
     private int ICON_MARGIN_END = 50;
-    private int SETTINGS_TOP_MARGIN = -400;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -400;
 
     // Settings
     private RelativeLayout mSettingsLayout;
@@ -77,7 +77,7 @@ public class NdroidStatusBar extends RelativeLayout {
         initIconLayout();
 
         LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, SETTINGS_TOP_MARGIN, 0 ,0);
+        params.setMargins(0, SETTINGS_TOP_MARGIN_COLLAPSED, 0 ,0);
         setLayoutParams(params);
         setBackgroundColor(Color.TRANSPARENT);
         addView(mSettingsLayout);
@@ -250,19 +250,16 @@ public class NdroidStatusBar extends RelativeLayout {
                 mStartPoint = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
-                Log.d(TAG, "ACTION_UP Offset =" + mOffset);
-
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
                 int margin = params.topMargin;
+                Log.d(TAG, "ACTION_UP margin =" + margin);
 
                 // Expand
-                if (mOffset >= 70) {
+                if (margin >= SETTINGS_TOP_MARGIN_COLLAPSED / 2) {
                     mOffset = 0;
                     expandStatusBar();
-                }
-
-                // Collapse
-                if (mOffset <= -70) {
+                } else if (margin <= SETTINGS_TOP_MARGIN_COLLAPSED / 2) {
+                    // Collapse
                     mOffset = MIN_OFFSET;
                     collapseStatusBar();
                 }
@@ -297,10 +294,10 @@ public class NdroidStatusBar extends RelativeLayout {
         int margin = params.topMargin;
 
         margin += offset;
-        if (margin < MIN_OFFSET) {
+        if (margin < SETTINGS_TOP_MARGIN_COLLAPSED) {
             margin = MIN_OFFSET;
-        } else if (mOffset >= MAX_OFFSET) {
-            margin = MAX_OFFSET;
+        } else if (margin >= 0) {
+            margin = 0;
         }
 
         params.setMargins(0,margin,0,0);
@@ -325,7 +322,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private void collapseStatusBar() {
         Log.d(TAG, "collapseStatusBar()");
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        params.setMargins(0,SETTINGS_TOP_MARGIN,0,0);
+        params.setMargins(0,SETTINGS_TOP_MARGIN_COLLAPSED,0,0);
         setLayoutParams(params);
         requestLayout();
     }
