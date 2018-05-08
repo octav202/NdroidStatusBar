@@ -1,11 +1,9 @@
 package com.ndroid.ndroidstatusbar;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.CompoundButton;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
-import android.widget.Switch;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,28 +32,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Switch wifi = (Switch) findViewById(R.id.wifiSwitch);
-        wifi.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                bar.setWifi(isChecked);
-            }
-        });
-
-        Switch bluetooth = (Switch) findViewById(R.id.bluetoothSwitch);
-        bluetooth.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                bar.setBluetooth(isChecked);
-            }
-        });
-
-        Switch ringtone = (Switch) findViewById(R.id.ringtoneSwich);
-        ringtone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                bar.setRingtone(isChecked ? 1 : 2);
-            }
-        });
     }
 }

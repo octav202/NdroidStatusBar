@@ -16,9 +16,6 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-
-import static android.widget.LinearLayout.HORIZONTAL;
-
 public class NdroidStatusBar extends RelativeLayout {
 
     private static final String TAG = "Ndroid_StatusBar";
@@ -60,7 +57,15 @@ public class NdroidStatusBar extends RelativeLayout {
     private int NFC_BUTTON_ID = 107;
     private int AIRPLANE_BUTTON_ID = 108;
    
-    
+    // Function status
+    private boolean mWifi = false;
+    private boolean mMobileData = false;
+    private int mRingtone = 1;
+    private boolean mBluetooth = false;
+    private boolean mOrientation = false;
+    private boolean mLocation = false;
+    private boolean mNfc = false;
+    private boolean mAirplane = false;
     
     // Brightness
     private RelativeLayout mBrightnessLayout;
@@ -121,6 +126,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         initSettingsLayout();
         initIconLayout();
+        initListeners();
 
         LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         params.setMargins(0, SETTINGS_TOP_MARGIN_COLLAPSED, 0, 0);
@@ -200,7 +206,7 @@ public class NdroidStatusBar extends RelativeLayout {
         bParams.addRule(END_OF, RINGTONE_BUTTON_ID);
         mBluetoothButton.setLayoutParams(bParams);
         mBluetoothButton.setTextColor(Color.BLACK);
-        mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_yes));
+        mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
         mButtonsLayout.addView(mBluetoothButton);
 
         // Screen Rotation
@@ -212,7 +218,7 @@ public class NdroidStatusBar extends RelativeLayout {
         oParams.addRule(ALIGN_PARENT_START, TRUE);
         mOrientationButton.setLayoutParams(oParams);
         mOrientationButton.setTextColor(Color.BLACK);
-        mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation_black));
+        mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation));
         mButtonsLayout.addView(mOrientationButton);
 
         // Location
@@ -236,7 +242,7 @@ public class NdroidStatusBar extends RelativeLayout {
         nParams.addRule(BELOW, RINGTONE_BUTTON_ID);
         mNfcButton.setLayoutParams(nParams);
         mNfcButton.setTextColor(Color.BLACK);
-        mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc_black));
+        mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc));
         mButtonsLayout.addView(mNfcButton);
 
         // Airplane
@@ -439,75 +445,9 @@ public class NdroidStatusBar extends RelativeLayout {
         bParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         bParams.setMarginEnd(ICON_MARGIN);
         mBluetoothIcon.setLayoutParams(bParams);
-        mBluetoothIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_yes));
+        mBluetoothIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
         mBluetoothIcon.setId(mBluetoothIconId);
         mIconLayout.addView(mBluetoothIcon);
-    }
-
-    public void setBatteryLevel(int level) {
-        Log.d(TAG, "setBatteryLevel() " + level);
-
-        mBatteryLevel = level;
-        mIconLayout.removeView(mBatteryView);
-        mBatteryView = new View(mContext);
-        mBatteryView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                mBatteryLevel));
-        if (mBatteryLevel >= 60) {
-            mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_green));
-        } else if (mBatteryLevel >= 30) {
-            mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_yellow));
-        } else {
-            mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_red));
-        }
-        mIconLayout.addView(mBatteryView);
-
-        // Brint text and icons on top of battery level
-        bringViewsToFront();
-    }
-
-    public void setWifi(boolean status) {
-        Log.d(TAG, "setWifi() " + status);
-        if (status) {
-            mWifiIcon.setVisibility(VISIBLE);
-        } else {
-            mWifiIcon.setVisibility(GONE);
-        }
-    }
-
-    public void setRingtone(int ringtone) {
-        Log.d(TAG, "setRingtone() " + ringtone);
-        mIconLayout.removeView(mRingtoneIcon);
-        switch (ringtone) {
-            case ON:
-                mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
-                break;
-            case OFF:
-                mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
-                break;
-            case VIBRATE:
-                mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
-                break;
-            default:
-                break;
-        }
-        mIconLayout.addView(mRingtoneIcon);
-    }
-
-    public void setBluetooth(boolean status) {
-        Log.d(TAG, "setBluetooth() " + status);
-        if (status) {
-            mBluetoothIcon.setVisibility(View.VISIBLE);
-        } else {
-            mBluetoothIcon.setVisibility(View.GONE);
-        }
-    }
-
-    private void bringViewsToFront() {
-        mCarrier.bringToFront();
-        mClockText.bringToFront();
-        mWifiIcon.bringToFront();
-        mRingtoneIcon.bringToFront();
-        mBluetoothIcon.bringToFront();
     }
 
     /**
@@ -599,6 +539,169 @@ public class NdroidStatusBar extends RelativeLayout {
         setLayoutParams(params);
         requestLayout();
     }
+
+    /**
+     * Button actions
+     */
+
+    private void initListeners() {
+        mWifiButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mWifi = !mWifi;
+                if (mWifi) {
+                    mWifiIcon.setVisibility(VISIBLE);
+                    mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
+                } else {
+                    mWifiIcon.setVisibility(GONE);
+                    mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi_disabled));
+                }
+            }
+        });
+
+        mMobileDataButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mMobileData = !mMobileData;
+                if (mMobileData) {
+                    //mWifiIcon.setVisibility(VISIBLE);
+                    mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data));
+                } else {
+                    //mWifiIcon.setVisibility(GONE);
+                    mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data_disabled));
+                }
+            }
+        });
+
+        mRingtoneButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mRingtone += 1;
+                if (mRingtone > VIBRATE) {
+                    mRingtone = ON;
+                }
+
+                mIconLayout.removeView(mRingtoneIcon);
+                switch (mRingtone) {
+                    case ON:
+                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+                        break;
+                    case OFF:
+                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                        break;
+                    case VIBRATE:
+                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
+                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
+                        break;
+                    default:
+                        break;
+                }
+                mIconLayout.addView(mRingtoneIcon);
+            }
+        });
+
+        mBluetoothButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mBluetooth =! mBluetooth;
+                if (mBluetooth) {
+                    mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
+                } else {
+                    mBluetoothIcon.setVisibility(View.GONE);
+                    mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_disabled));
+                }
+            }
+        });
+
+        mOrientationButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mOrientation =! mOrientation;
+                if (mOrientation) {
+                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation));
+                } else {
+                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation_disabled));
+                }
+            }
+        });
+
+        mLocationButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mLocation =! mLocation;
+                if (mLocation) {
+                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location));
+                } else {
+                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location_disabled));
+                }
+            }
+        });
+
+        mNfcButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mNfc =! mNfc;
+                if (mNfc) {
+                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc));
+                } else {
+                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc_disabled));
+                }
+            }
+        });
+
+        mAirplaneButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAirplane =! mAirplane;
+                if (mAirplane) {
+                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode));
+                } else {
+                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode_disabled));
+                }
+            }
+        });
+    }
+
+    public void setBatteryLevel(int level) {
+        Log.d(TAG, "setBatteryLevel() " + level);
+
+        mBatteryLevel = level;
+        mIconLayout.removeView(mBatteryView);
+        mBatteryView = new View(mContext);
+        mBatteryView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                mBatteryLevel));
+        if (mBatteryLevel >= 60) {
+            mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_green));
+        } else if (mBatteryLevel >= 30) {
+            mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_yellow));
+        } else {
+            mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_red));
+        }
+        mIconLayout.addView(mBatteryView);
+
+        // Brint text and icons on top of battery level
+        bringViewsToFront();
+    }
+
+    private void bringViewsToFront() {
+        mCarrier.bringToFront();
+        mClockText.bringToFront();
+        mWifiIcon.bringToFront();
+        mRingtoneIcon.bringToFront();
+        mBluetoothIcon.bringToFront();
+    }
+
 
     // Mandatory Constructors
     public NdroidStatusBar(Context context, @Nullable AttributeSet attrs) {
