@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
@@ -340,6 +341,14 @@ public class NdroidStatusBar extends RelativeLayout {
         barParams.addRule(RelativeLayout.BELOW, mBrightnessEndId);
         mBrightnessBar.setLayoutParams(barParams);
         mBrightnessLayout.addView(mBrightnessBar);
+
+        int brightnessValue = Settings.System.getInt(
+                mContext.getContentResolver(),
+                Settings.System.SCREEN_BRIGHTNESS,
+                0
+        );
+        mBrightnessBar.setMax(255);
+        mBrightnessBar.setProgress(brightnessValue);
 
         mSettingsLayout.addView(mBrightnessLayout);
     }
@@ -796,15 +805,38 @@ public class NdroidStatusBar extends RelativeLayout {
                     }
                 }
             }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        mBrightnessBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    // TODO - Add System Permission
+                    try {
+                        Settings.System.putInt(
+                                mContext.getContentResolver(),
+                                Settings.System.SCREEN_BRIGHTNESS,
+                                progress
+                        );
+                    } catch (Exception e) {
+                        Toast.makeText(mContext, "Failed set Brightness - No Permission",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
     }
