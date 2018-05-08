@@ -28,8 +28,8 @@ public class NdroidStatusBar extends RelativeLayout {
     private int BUTTON_MARGIN = 55;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
-    private int ICON_MARGIN = 25;
-    private int ICON_MARGIN_END = 50;
+    private int ICON_MARGIN = 7;
+    private int ICON_MARGIN_END = 25;
     private int SETTINGS_TOP_MARGIN_COLLAPSED = -700;
     private int LAYOUT_MARGIN = 15;
 
@@ -89,7 +89,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
     // [_____ Status Bar _____] //
     private RelativeLayout mIconLayout;
-    private int mIconLayoutId = 6;
+    private int mIconLayoutId = 20;
 
     // Carrier
     private TextView mCarrier;
@@ -98,16 +98,26 @@ public class NdroidStatusBar extends RelativeLayout {
     private View mBatteryView;
     // Clock
     private TextView mClockText;
-    private int mClockId = 1;
-    // Wifi
+    private int mClockId = 21;
+    // Status Bar Icons
     private View mWifiIcon;
-    private int mWifiIconId = 2;
-    // Bluetooth
+    private int mWifiIconId = 22;
     private View mBluetoothIcon;
-    private int mBluetoothIconId = 3;
-    // Ringtone
+    private int mBluetoothIconId = 23;
     private View mRingtoneIcon;
-    private int mRingtoneIconId = 4;
+    private int mRingtoneIconId = 24;
+    private View mMobileDataIcon;
+    private int mMobileDataIconId = 25;
+    private View mOrientationIcon;
+    private int mOrientationIconId = 26;
+    private View mLocationIcon;
+    private int mLocationIconId = 27;
+    private View mNfcIcon;
+    private int mNfcIconId = 28;
+    private View mAirplaneIcon;
+    private int mAirplaneIconId = 29;
+
+    // Ringtone Values
     private static final int ON = 1;
     private static final int OFF = 2;
     private static final int VIBRATE = 3;
@@ -256,6 +266,15 @@ public class NdroidStatusBar extends RelativeLayout {
         mAirplaneButton.setTextColor(Color.BLACK);
         mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode));
         mButtonsLayout.addView(mAirplaneButton);
+
+        // Initial states - all disabled
+        mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode_disabled));
+        mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location_disabled));
+        mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation_disabled));
+        mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi_disabled));
+        mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data_disabled));
+        mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth_disabled));
+        mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc_disabled));
 
         mSettingsLayout.addView(mButtonsLayout);
     }
@@ -448,6 +467,71 @@ public class NdroidStatusBar extends RelativeLayout {
         mBluetoothIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
         mBluetoothIcon.setId(mBluetoothIconId);
         mIconLayout.addView(mBluetoothIcon);
+
+        // Mobile Data
+        mMobileDataIcon = new View(mContext);
+        RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        mParams.addRule(RelativeLayout.START_OF, mBluetoothIconId);
+        mParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
+        mParams.setMarginEnd(ICON_MARGIN);
+        mMobileDataIcon.setLayoutParams(mParams);
+        mMobileDataIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data));
+        mMobileDataIcon.setId(mMobileDataIconId);
+        mIconLayout.addView(mMobileDataIcon);
+
+        // Screen Rotation
+        mOrientationIcon = new View(mContext);
+        RelativeLayout.LayoutParams oParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        oParams.addRule(RelativeLayout.START_OF, mMobileDataIconId);
+        oParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
+        oParams.setMarginEnd(ICON_MARGIN);
+        mOrientationIcon.setLayoutParams(oParams);
+        mOrientationIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation));
+        mOrientationIcon.setId(mOrientationIconId);
+        mIconLayout.addView(mOrientationIcon);
+
+        // Location
+        mLocationIcon = new View(mContext);
+        RelativeLayout.LayoutParams lParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        lParams.addRule(RelativeLayout.START_OF, mOrientationIconId);
+        lParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
+        lParams.setMarginEnd(ICON_MARGIN);
+        mLocationIcon.setLayoutParams(lParams);
+        mLocationIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location));
+        mLocationIcon.setId(mLocationIconId);
+        mIconLayout.addView(mLocationIcon);
+
+        // Nfc
+        mNfcIcon = new View(mContext);
+        RelativeLayout.LayoutParams nParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        nParams.addRule(RelativeLayout.START_OF, mLocationIconId);
+        nParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
+        nParams.setMarginEnd(ICON_MARGIN);
+        mNfcIcon.setLayoutParams(nParams);
+        mNfcIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc));
+        mNfcIcon.setId(mNfcIconId);
+        mIconLayout.addView(mNfcIcon);
+
+        // Airplane Mode
+        mAirplaneIcon = new View(mContext);
+        RelativeLayout.LayoutParams aParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        aParams.addRule(RelativeLayout.START_OF, mNfcIconId);
+        aParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
+        aParams.setMarginEnd(ICON_MARGIN);
+        mAirplaneIcon.setLayoutParams(aParams);
+        mAirplaneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode));
+        mAirplaneIcon.setId(mAirplaneIconId);
+        mIconLayout.addView(mAirplaneIcon);
+
+        // Initial States - all disabled
+        mWifiIcon.setVisibility(GONE);
+        mMobileDataIcon.setVisibility(GONE);
+        mBluetoothIcon.setVisibility(GONE);
+        mOrientationIcon.setVisibility(GONE);
+        mWifiIcon.setVisibility(GONE);
+        mLocationIcon.setVisibility(GONE);
+        mNfcIcon.setVisibility(GONE);
+        mAirplaneIcon.setVisibility(GONE);
     }
 
     /**
@@ -564,10 +648,10 @@ public class NdroidStatusBar extends RelativeLayout {
             public void onClick(View v) {
                 mMobileData = !mMobileData;
                 if (mMobileData) {
-                    //mWifiIcon.setVisibility(VISIBLE);
+                    mMobileDataIcon.setVisibility(VISIBLE);
                     mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data));
                 } else {
-                    //mWifiIcon.setVisibility(GONE);
+                    mMobileDataIcon.setVisibility(GONE);
                     mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data_disabled));
                 }
             }
@@ -621,10 +705,10 @@ public class NdroidStatusBar extends RelativeLayout {
             public void onClick(View v) {
                 mOrientation =! mOrientation;
                 if (mOrientation) {
-                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mOrientationIcon.setVisibility(View.VISIBLE);
                     mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation));
                 } else {
-                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mOrientationIcon.setVisibility(View.GONE);
                     mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation_disabled));
                 }
             }
@@ -635,10 +719,10 @@ public class NdroidStatusBar extends RelativeLayout {
             public void onClick(View v) {
                 mLocation =! mLocation;
                 if (mLocation) {
-                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mLocationIcon.setVisibility(View.VISIBLE);
                     mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location));
                 } else {
-                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mLocationIcon.setVisibility(View.GONE);
                     mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location_disabled));
                 }
             }
@@ -649,10 +733,10 @@ public class NdroidStatusBar extends RelativeLayout {
             public void onClick(View v) {
                 mNfc =! mNfc;
                 if (mNfc) {
-                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mNfcIcon.setVisibility(View.VISIBLE);
                     mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc));
                 } else {
-                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mNfcIcon.setVisibility(View.GONE);
                     mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc_disabled));
                 }
             }
@@ -663,10 +747,10 @@ public class NdroidStatusBar extends RelativeLayout {
             public void onClick(View v) {
                 mAirplane =! mAirplane;
                 if (mAirplane) {
-                    //mBluetoothIcon.setVisibility(View.VISIBLE);
+                    mAirplaneIcon.setVisibility(View.VISIBLE);
                     mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode));
                 } else {
-                    //mBluetoothIcon.setVisibility(View.GONE);
+                    mAirplaneIcon.setVisibility(View.GONE);
                     mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode_disabled));
                 }
             }
