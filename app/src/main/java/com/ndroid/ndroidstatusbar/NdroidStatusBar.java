@@ -1,8 +1,11 @@
 package com.ndroid.ndroidstatusbar;
 
 import android.content.Context;
+import android.database.ContentObserver;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.media.AudioManager;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
@@ -15,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class NdroidStatusBar extends RelativeLayout {
 
@@ -23,14 +27,14 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
-    private int SETTINGS_HEIGHT = 700;
+    private int SETTINGS_HEIGHT = 800;
     private int BAR_HEIGHT = 90;
     private int BUTTON_MARGIN = 55;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN = 7;
-    private int ICON_MARGIN_END = 25;
-    private int SETTINGS_TOP_MARGIN_COLLAPSED = -700;
+    private int ICON_MARGIN_END = 30;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -800;
     private int LAYOUT_MARGIN = 15;
 
     // [_____ Settings _____]
@@ -121,12 +125,13 @@ public class NdroidStatusBar extends RelativeLayout {
     private static final int ON = 1;
     private static final int OFF = 2;
     private static final int VIBRATE = 3;
+    RingtoneVolumeObserver mVolumeObserver;
 
     // Touch Events
     private float mStartPoint;
     private int mOffset = 0;
-    private static final int MIN_OFFSET = -700;
-    private static final int MAX_OFFSET = 700;
+    private static final int MIN_OFFSET = -800;
+    private static final int MAX_OFFSET = 800;
 
     public NdroidStatusBar(Context context) {
         super(context);
@@ -144,6 +149,10 @@ public class NdroidStatusBar extends RelativeLayout {
         setBackgroundColor(Color.TRANSPARENT);
         addView(mSettingsLayout);
         addView(mIconLayout);
+
+        mVolumeObserver = new RingtoneVolumeObserver(mContext, new Handler());
+        mContext.getContentResolver().registerContentObserver(android.provider.Settings.System.CONTENT_URI,
+                true, mVolumeObserver);
     }
 
     // Init Settings Layout
@@ -387,6 +396,11 @@ public class NdroidStatusBar extends RelativeLayout {
         barParams.addRule(RelativeLayout.BELOW, mRingtoneEndId);
         mRingtoneBar.setLayoutParams(barParams);
         mRingtoneLayout.addView(mRingtoneBar);
+
+        // Init Ringtone progress
+        AudioManager audio = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        mRingtoneBar.setMax(audio.getStreamMaxVolume(AudioManager.STREAM_RING));
+        mRingtoneBar.setProgress(audio.getStreamVolume(AudioManager.STREAM_RING));
 
         mSettingsLayout.addView(mRingtoneLayout);
     }
@@ -755,6 +769,44 @@ public class NdroidStatusBar extends RelativeLayout {
                 }
             }
         });
+
+        mRingtoneBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d(TAG, " Progress : " + progress + ", fromUser : " + fromUser);
+
+                switch (progress) {
+                    case 0:
+                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                        break;
+                    default:
+                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+                        break;
+                }
+
+                if (fromUser) {
+                    AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+                    try {
+                        audioManager.setStreamVolume(AudioManager.STREAM_RING, progress, 0);
+                    } catch (Exception e) {
+                        Toast.makeText(mContext, "Failed set stream volume - Do not disturb mode active",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     public void setBatteryLevel(int level) {
@@ -798,6 +850,28 @@ public class NdroidStatusBar extends RelativeLayout {
 
     public NdroidStatusBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+    }
+
+    // Observer for Volume Changes
+    public class RingtoneVolumeObserver extends ContentObserver {
+        Context context;
+
+        public RingtoneVolumeObserver(Context c, Handler handler) {
+            super(handler);
+            context=c;
+        }
+
+        @Override
+        public boolean deliverSelfNotifications() {
+            return super.deliverSelfNotifications();
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            super.onChange(selfChange);
+            AudioManager audio = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+            mRingtoneBar.setProgress(audio.getStreamVolume(AudioManager.STREAM_RING));
+        }
     }
 
 }
