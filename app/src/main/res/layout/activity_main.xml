@@ -20,30 +20,6 @@
             android:max="100"
             android:min="0"
             />
-
-        <Switch
-            android:id="@+id/wifiSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/seekBar"
-            android:text="Wifi"
-            android:layout_margin="20dp" />
-
-        <Switch
-            android:id="@+id/bluetoothSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/wifiSwitch"
-            android:text="Bluetoot"
-            android:layout_margin="20dp"/>
-
-        <Switch
-            android:id="@+id/ringtoneSwich"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/bluetoothSwitch"
-            android:text="Ringtone"
-            android:layout_margin="20dp"/>
     </RelativeLayout>
 
 </RelativeLayout>

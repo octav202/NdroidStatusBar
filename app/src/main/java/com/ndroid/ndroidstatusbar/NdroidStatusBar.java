@@ -3,6 +3,7 @@ package com.ndroid.ndroidstatusbar;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.os.Handler;
@@ -30,13 +31,14 @@ public class NdroidStatusBar extends RelativeLayout {
     // Dimensions
     private int SETTINGS_HEIGHT = 800;
     private int BAR_HEIGHT = 90;
-    private int BUTTON_MARGIN = 55;
+    private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN = 7;
-    private int ICON_MARGIN_END = 30;
+    private int ICON_MARGIN_END = 35;
     private int SETTINGS_TOP_MARGIN_COLLAPSED = -800;
     private int LAYOUT_MARGIN = 15;
+    private int BAR_ICON_MARGIN = 45;
 
     // [_____ Settings _____]
     private RelativeLayout mSettingsLayout;
@@ -137,9 +139,7 @@ public class NdroidStatusBar extends RelativeLayout {
     public NdroidStatusBar(Context context) {
         super(context);
         Log.d(TAG, "NdroidStatusBar()");
-
         mContext = context;
-
         initSettingsLayout();
         initIconLayout();
         initListeners();
@@ -150,6 +150,7 @@ public class NdroidStatusBar extends RelativeLayout {
         setBackgroundColor(Color.TRANSPARENT);
         addView(mSettingsLayout);
         addView(mIconLayout);
+        setBatteryLevel(0);
 
         mVolumeObserver = new RingtoneVolumeObserver(mContext, new Handler());
         mContext.getContentResolver().registerContentObserver(android.provider.Settings.System.CONTENT_URI,
@@ -188,7 +189,6 @@ public class NdroidStatusBar extends RelativeLayout {
         wParams.setMarginStart(BUTTON_MARGIN);
         wParams.setMarginEnd(BUTTON_MARGIN);
         wParams.addRule(ALIGN_PARENT_START, TRUE);
-        mWifiButton.setTextColor(Color.BLACK);
         mWifiButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_wifi));
         mWifiButton.setGravity(Gravity.CENTER);
         mButtonsLayout.addView(mWifiButton);
@@ -201,7 +201,6 @@ public class NdroidStatusBar extends RelativeLayout {
         mParams.setMarginEnd(BUTTON_MARGIN);
         mParams.addRule(END_OF, WIFI_BUTTON_ID);
         mMobileDataButton.setLayoutParams(mParams);
-        mMobileDataButton.setTextColor(Color.BLACK);
         mMobileDataButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_mobile_data));
         mButtonsLayout.addView(mMobileDataButton);
 
@@ -213,7 +212,6 @@ public class NdroidStatusBar extends RelativeLayout {
         rParams.setMarginEnd(BUTTON_MARGIN);
         rParams.addRule(END_OF, MOBILE_DATA_BUTTON_ID);
         mRingtoneButton.setLayoutParams(rParams);
-        mRingtoneButton.setTextColor(Color.BLACK);
         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
         mButtonsLayout.addView(mRingtoneButton);
 
@@ -225,7 +223,6 @@ public class NdroidStatusBar extends RelativeLayout {
         bParams.setMarginEnd(BUTTON_MARGIN);
         bParams.addRule(END_OF, RINGTONE_BUTTON_ID);
         mBluetoothButton.setLayoutParams(bParams);
-        mBluetoothButton.setTextColor(Color.BLACK);
         mBluetoothButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_bluetooth));
         mButtonsLayout.addView(mBluetoothButton);
 
@@ -237,7 +234,6 @@ public class NdroidStatusBar extends RelativeLayout {
         oParams.addRule(BELOW, WIFI_BUTTON_ID);
         oParams.addRule(ALIGN_PARENT_START, TRUE);
         mOrientationButton.setLayoutParams(oParams);
-        mOrientationButton.setTextColor(Color.BLACK);
         mOrientationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_screen_lock_rotation));
         mButtonsLayout.addView(mOrientationButton);
 
@@ -249,7 +245,6 @@ public class NdroidStatusBar extends RelativeLayout {
         locParams.addRule(BELOW, MOBILE_DATA_BUTTON_ID);
         locParams.addRule(END_OF, ORIENTATION_BUTTON_ID);
         mLocationButton.setLayoutParams(locParams);
-        mLocationButton.setTextColor(Color.BLACK);
         mLocationButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_location));
         mButtonsLayout.addView(mLocationButton);
 
@@ -261,7 +256,6 @@ public class NdroidStatusBar extends RelativeLayout {
         nParams.addRule(END_OF, LOCATION_BUTTON_ID);
         nParams.addRule(BELOW, RINGTONE_BUTTON_ID);
         mNfcButton.setLayoutParams(nParams);
-        mNfcButton.setTextColor(Color.BLACK);
         mNfcButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_nfc));
         mButtonsLayout.addView(mNfcButton);
 
@@ -273,7 +267,6 @@ public class NdroidStatusBar extends RelativeLayout {
         aParams.addRule(BELOW, BLUETOOTH_BUTTON_ID);
         aParams.addRule(END_OF, NFC_BUTTON_ID);
         mAirplaneButton.setLayoutParams(aParams);
-        mAirplaneButton.setTextColor(Color.BLACK);
         mAirplaneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_airplanemode));
         mButtonsLayout.addView(mAirplaneButton);
 
@@ -304,9 +297,9 @@ public class NdroidStatusBar extends RelativeLayout {
         mBrightnessStart = new View(mContext);
         RelativeLayout.LayoutParams brStartParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
         brStartParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
-        brStartParams.setMarginStart(ICON_MARGIN);
+        brStartParams.setMarginStart(BAR_ICON_MARGIN);
         mBrightnessStart.setLayoutParams(brStartParams);
-        mBrightnessStart.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_brightness_low));
+        mBrightnessStart.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_brightness_bar_low));
         mBrightnessStart.setId(mBrightnessStartId);
         mBrightnessLayout.addView(mBrightnessStart);
 
@@ -314,17 +307,17 @@ public class NdroidStatusBar extends RelativeLayout {
         mBrightnessEnd = new View(mContext);
         RelativeLayout.LayoutParams brEndParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
         brEndParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
-        brEndParams.setMarginEnd(ICON_MARGIN);
+        brEndParams.setMarginEnd(BAR_ICON_MARGIN);
         mBrightnessEnd.setLayoutParams(brEndParams);
-        mBrightnessEnd.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_brightness_high));
+        mBrightnessEnd.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_brightness_bar_high));
         mBrightnessEnd.setId(mBrightnessEndId);
         mBrightnessLayout.addView(mBrightnessEnd);
 
         // Brightness TextView
         mBrightnessText = new TextView(mContext);
-        mBrightnessText.setText("Brightness");
+        mBrightnessText.setText(R.string.brightness);
         mBrightnessText.setBackgroundColor(Color.TRANSPARENT);
-        mBrightnessText.setTextColor(Color.BLACK);
+        mBrightnessText.setTextColor(ContextCompat.getColor(mContext, R.color.divider));
         RelativeLayout.LayoutParams bTextParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         bTextParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
@@ -368,9 +361,9 @@ public class NdroidStatusBar extends RelativeLayout {
         mRingtoneStart = new View(mContext);
         RelativeLayout.LayoutParams rStartParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
         rStartParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
-        rStartParams.setMarginStart(ICON_MARGIN);
+        rStartParams.setMarginStart(BAR_ICON_MARGIN);
         mRingtoneStart.setLayoutParams(rStartParams);
-        mRingtoneStart.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+        mRingtoneStart.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off_bar));
         mRingtoneStart.setId(mRingtoneStartId);
         mRingtoneLayout.addView(mRingtoneStart);
 
@@ -378,17 +371,17 @@ public class NdroidStatusBar extends RelativeLayout {
         mRingtoneEnd = new View(mContext);
         RelativeLayout.LayoutParams rEndParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
         rEndParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
-        rEndParams.setMarginEnd(ICON_MARGIN);
+        rEndParams.setMarginEnd(BAR_ICON_MARGIN);
         mRingtoneEnd.setLayoutParams(rEndParams);
-        mRingtoneEnd.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
+        mRingtoneEnd.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up_bar));
         mRingtoneEnd.setId(mRingtoneEndId);
         mRingtoneLayout.addView(mRingtoneEnd);
 
         // Ringtone TextView
         mRingtoneText = new TextView(mContext);
-        mRingtoneText.setText("Ringtone");
+        mRingtoneText.setText(R.string.ringtone);
         mRingtoneText.setBackgroundColor(Color.TRANSPARENT);
-        mRingtoneText.setTextColor(Color.BLACK);
+        mRingtoneText.setTextColor(ContextCompat.getColor(mContext, R.color.divider));
         RelativeLayout.LayoutParams rTextParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         rTextParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
@@ -433,14 +426,14 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Carrier
         mCarrier = new TextView(mContext);
-        mCarrier.setText("Orange");
+        mCarrier.setText(R.string.carrier);
         RelativeLayout.LayoutParams cParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         cParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         cParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
         mCarrier.setLayoutParams(cParams);
         cParams.setMarginStart(ICON_MARGIN_END);
-        mCarrier.setTextColor(Color.BLACK);
+        mCarrier.setTextColor(ContextCompat.getColor(mContext, R.color.textColor));
         mCarrier.setBackgroundColor(Color.TRANSPARENT);
         mIconLayout.addView(mCarrier);
 
@@ -452,7 +445,7 @@ public class NdroidStatusBar extends RelativeLayout {
         params.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
         mClockText.setLayoutParams(params);
         mClockText.setBackgroundColor(Color.TRANSPARENT);
-        mClockText.setTextColor(Color.BLACK);
+        mClockText.setTextColor(ContextCompat.getColor(mContext, R.color.textColor));
         mClockText.setTypeface(mClockText.getTypeface(), Typeface.BOLD);
         mClockText.setId(mClockId);
         mIconLayout.addView(mClockText);
