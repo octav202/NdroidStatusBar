@@ -1,11 +1,14 @@
 package com.ndroid.ndroidstatusbar;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.ContentObserver;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
@@ -15,12 +18,17 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import static android.content.Context.WINDOW_SERVICE;
 
 public class NdroidStatusBar extends RelativeLayout {
 
@@ -39,6 +47,8 @@ public class NdroidStatusBar extends RelativeLayout {
     private int SETTINGS_TOP_MARGIN_COLLAPSED = -800;
     private int LAYOUT_MARGIN = 15;
     private int BAR_ICON_MARGIN = 45;
+
+    private int mLastTopMargin;
 
     // [_____ Settings _____]
     private RelativeLayout mSettingsLayout;
@@ -129,6 +139,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private static final int OFF = 2;
     private static final int VIBRATE = 3;
     RingtoneVolumeObserver mVolumeObserver;
+    WindowManager mWindowManager;
 
     // Touch Events
     private float mStartPoint;
@@ -144,13 +155,25 @@ public class NdroidStatusBar extends RelativeLayout {
         initIconLayout();
         initListeners();
 
-        LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, SETTINGS_TOP_MARGIN_COLLAPSED, 0, 0);
-        setLayoutParams(params);
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                        | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                PixelFormat.TRANSLUCENT
+        );
+
+        params.gravity = Gravity.TOP | Gravity.LEFT;
         setBackgroundColor(Color.TRANSPARENT);
         addView(mSettingsLayout);
         addView(mIconLayout);
         setBatteryLevel(0);
+
+        mWindowManager = (WindowManager) mContext.getSystemService(WINDOW_SERVICE);
+        mWindowManager.addView(this, params);
 
         mVolumeObserver = new RingtoneVolumeObserver(mContext, new Handler());
         mContext.getContentResolver().registerContentObserver(android.provider.Settings.System.CONTENT_URI,
@@ -162,6 +185,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mSettingsLayout = new RelativeLayout(mContext);
         LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, SETTINGS_HEIGHT);
         params.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+        params.topMargin = SETTINGS_TOP_MARGIN_COLLAPSED;
         mSettingsLayout.setLayoutParams(params);
         mSettingsLayout.setBackgroundColor(ContextCompat.getColor(mContext, R.color.status_bar_background));
         mSettingsLayout.setId(mSettingsLayoutId);
@@ -559,11 +583,17 @@ public class NdroidStatusBar extends RelativeLayout {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                RelativeLayout.LayoutParams par = (RelativeLayout.LayoutParams)
+                        mSettingsLayout.getLayoutParams();
+                mLastTopMargin = par.topMargin;
+                Log.d(TAG, "ACTION_UP margin =" + mLastTopMargin);
                 mStartPoint = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
-                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+                        mSettingsLayout.getLayoutParams();
                 int margin = params.topMargin;
+
                 Log.d(TAG, "ACTION_UP margin =" + margin);
 
                 // Expand
@@ -589,7 +619,6 @@ public class NdroidStatusBar extends RelativeLayout {
                 } else if (mOffset >= MAX_OFFSET) {
                     mOffset = MAX_OFFSET;
                 }
-                Log.d(TAG, "ACTION_MOVE Offset =" + mOffset);
                 updateLayoutOffset(mOffset);
                 break;
         }
@@ -603,19 +632,20 @@ public class NdroidStatusBar extends RelativeLayout {
      * @param offset
      */
     private void updateLayoutOffset(int offset) {
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        int margin = params.topMargin;
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+                mSettingsLayout.getLayoutParams();
 
-        margin += offset;
-        if (margin < SETTINGS_TOP_MARGIN_COLLAPSED) {
-            margin = MIN_OFFSET;
-        } else if (margin >= 0) {
-            margin = 0;
+        int topMargin = mLastTopMargin;
+        topMargin += offset;
+
+        if (topMargin <= SETTINGS_TOP_MARGIN_COLLAPSED) {
+            topMargin = MIN_OFFSET;
+        } else if (topMargin >= 0) {
+            topMargin = 0;
         }
-
-        params.setMargins(0, margin, 0, 0);
-        setLayoutParams(params);
-        requestLayout();
+        Log.d(TAG, "\n updateLayoutOffset()  TOP MARGIN " + topMargin);
+        params.topMargin = topMargin;
+        mSettingsLayout.setLayoutParams(params);
     }
 
     /**
@@ -623,10 +653,10 @@ public class NdroidStatusBar extends RelativeLayout {
      */
     private void expandStatusBar() {
         Log.d(TAG, "expandStatusBar()");
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        params.setMargins(0, 0, 0, 0);
-        setLayoutParams(params);
-        requestLayout();
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+                mSettingsLayout.getLayoutParams();
+        params.topMargin = 0;
+        mSettingsLayout.setLayoutParams(params);
     }
 
     /**
@@ -634,10 +664,10 @@ public class NdroidStatusBar extends RelativeLayout {
      */
     private void collapseStatusBar() {
         Log.d(TAG, "collapseStatusBar()");
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        params.setMargins(0, SETTINGS_TOP_MARGIN_COLLAPSED, 0, 0);
-        setLayoutParams(params);
-        requestLayout();
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+                mSettingsLayout.getLayoutParams();
+        params.topMargin = SETTINGS_TOP_MARGIN_COLLAPSED;
+        mSettingsLayout.setLayoutParams(params);
     }
 
     /**

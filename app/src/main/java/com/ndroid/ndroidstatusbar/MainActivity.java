@@ -1,7 +1,14 @@
 package com.ndroid.ndroidstatusbar;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.PixelFormat;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
@@ -15,7 +22,8 @@ public class MainActivity extends AppCompatActivity {
         RelativeLayout root = findViewById(R.id.rootLayout);
 
         final NdroidStatusBar bar = new NdroidStatusBar(this);
-        root.addView(bar);
+//        root.addView(bar);
+
 
         SeekBar seekBar = findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
