@@ -3,9 +3,9 @@ package com.ndroid.ndroidstatusbar;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -16,17 +16,23 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.content.Context.WINDOW_SERVICE;
 
@@ -37,16 +43,18 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
-    private int SETTINGS_HEIGHT = 800;
+    private int SETTINGS_HEIGHT = 900;
     private int BAR_HEIGHT = 90;
     private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
     private int ICON_SIZE = 60;
     private int ICON_MARGIN = 7;
     private int ICON_MARGIN_END = 35;
-    private int SETTINGS_TOP_MARGIN_COLLAPSED = -800;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -900;
     private int LAYOUT_MARGIN = 15;
     private int BAR_ICON_MARGIN = 45;
+    private int GRID_HEIGHT = 100;
+    private int GRID_MARGIN_START_END = 100;
 
     private int mLastTopMargin;
 
@@ -104,6 +112,16 @@ public class NdroidStatusBar extends RelativeLayout {
     private int mRingtoneEndId = 16;
     private TextView mRingtoneText;
 
+    // Modes - Personal Assistant
+    private RelativeLayout mModesLayout;
+    private int MODES_LAYOUT_ID = 30;
+    private GridView mModesGrid;
+    private int MODES_GRID_ID = 31;
+    private int MODES_GRID_NUM_COLUMNS = 5;
+    private int MODES_GRID_VERTICAL_SPACE = 10;
+    private int MODES_GRID_HORIZONTAL_SPACE = 10;
+
+
     // [_____ Status Bar _____] //
     private RelativeLayout mIconLayout;
     private int mIconLayoutId = 20;
@@ -144,8 +162,8 @@ public class NdroidStatusBar extends RelativeLayout {
     // Touch Events
     private float mStartPoint;
     private int mOffset = 0;
-    private static final int MIN_OFFSET = -800;
-    private static final int MAX_OFFSET = 800;
+    private static final int MIN_OFFSET = -900;
+    private static final int MAX_OFFSET = 900;
 
     public NdroidStatusBar(Context context) {
         super(context);
@@ -193,6 +211,7 @@ public class NdroidStatusBar extends RelativeLayout {
         initButtonsLayout();
         initBrightnessLayout();
         initRingtoneLayout();
+        initModesLayout();
     }
 
     private void initButtonsLayout() {
@@ -429,6 +448,52 @@ public class NdroidStatusBar extends RelativeLayout {
         mRingtoneBar.setProgress(audio.getStreamVolume(AudioManager.STREAM_RING));
 
         mSettingsLayout.addView(mRingtoneLayout);
+    }
+
+    private void initModesLayout() {
+        // Modes Layout
+        mModesLayout = new RelativeLayout(mContext);
+        mModesLayout.setId(MODES_LAYOUT_ID);
+        mModesLayout.setBackgroundColor(Color.TRANSPARENT);
+        RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT);
+        mParams.addRule(BELOW, mRingtoneLayoutId);
+        mParams.setMargins(LAYOUT_MARGIN, 0, LAYOUT_MARGIN, 0);
+        mModesLayout.setLayoutParams(mParams);
+
+        mModesGrid = new GridView(mContext);
+        RelativeLayout.LayoutParams gParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                GRID_HEIGHT);
+        mModesGrid.setBackgroundColor(Color.TRANSPARENT);
+        gParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+        gParams.setMargins(GRID_MARGIN_START_END, ICON_MARGIN, ICON_MARGIN, GRID_MARGIN_START_END);
+        mModesGrid.setLayoutParams(gParams);
+        mModesGrid.setId(MODES_GRID_ID);
+        mModesLayout.addView(mModesGrid);
+        mModesGrid.setNumColumns(MODES_GRID_NUM_COLUMNS);
+        mModesGrid.setVerticalSpacing(MODES_GRID_VERTICAL_SPACE);
+        mModesGrid.setHorizontalSpacing(MODES_GRID_HORIZONTAL_SPACE);
+
+        // Modes Adapter
+        List<Mode> modes = getModes();
+        List<String> modeNames = new ArrayList<String >();
+        for (Mode m:modes) {
+            modeNames.add(m.getName());
+        }
+        final ModesAdapter adapter = new ModesAdapter(mContext, modes);
+        mModesGrid.setAdapter(adapter);
+
+        // Grid Item listener
+        mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (adapter != null) {
+                    adapter.onItemSelected(position);
+                }
+            }
+        });
+
+        mSettingsLayout.addView(mModesLayout);
     }
 
     // Init Status Bar Layout
@@ -862,6 +927,7 @@ public class NdroidStatusBar extends RelativeLayout {
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
+
     }
 
     public void setBatteryLevel(int level) {
@@ -927,6 +993,152 @@ public class NdroidStatusBar extends RelativeLayout {
             AudioManager audio = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
             mRingtoneBar.setProgress(audio.getStreamVolume(AudioManager.STREAM_RING));
         }
+    }
+
+    /**
+     * Modes
+     */
+    private List<Mode> getModes() {
+
+        String PROVIDER_NAME = "com.example.octav.proiect";
+        String URL = "content://" + PROVIDER_NAME + "/modes";
+
+        Uri modes = Uri.parse(URL);
+
+        Cursor cursor = mContext.getContentResolver().query(modes, null, null, null, null);
+
+        List<Mode> modeList = new ArrayList<Mode>();
+        if (cursor != null) {
+            cursor.moveToFirst();
+            while (cursor.isAfterLast() == false) {
+                int id = cursor.getInt(0);
+                String name = cursor.getString(1);
+                Mode m = new Mode(id, name);
+                modeList.add(m);
+                cursor.moveToNext();
+            }
+        }
+        return modeList;
+    }
+
+    private class Mode {
+        private int id;
+        private String name;
+        private boolean selected;
+        
+        public Mode(int id, String name) {
+            this.id = id;
+            this.name = name;
+            // false is default
+            selected = false;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public boolean isSelected() {
+            return selected;
+        }
+
+        public void setSelected(boolean selected) {
+            this.selected = selected;
+        }
+
+        @Override
+        public String toString() {
+            return "Mode{" +
+                    "id=" + id +
+                    ", name='" + name + '\'' +
+                    '}';
+        }
+    }
+
+    public class ModesAdapter extends BaseAdapter {
+
+        private List<Mode> mModes;
+        private Context mContext;
+
+        public ModesAdapter(Context c, List<Mode> data) {
+            mContext = c;
+            mModes = data;
+        }
+
+        public int getCount() {
+            return mModes.size();
+        }
+
+        public Object getItem(int position) {
+            return null;
+        }
+
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+            FileHolder holder = new FileHolder();
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                v = inflater.inflate(R.layout.mode_grid_item, null);
+                holder.modeTextView = v.findViewById(R.id.modeTextView);
+                v.setTag(holder);
+            } else {
+                holder = (FileHolder) v.getTag();
+            }
+
+            Mode mode = mModes.get(position);
+            holder.modeTextView.setText(mode.getName());
+            holder.modeTextView.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+            if (mode.isSelected()) {
+                v.setBackground(ContextCompat.getDrawable(mContext, R.drawable.mode_background_selected));
+            } else {
+                v.setBackground(ContextCompat.getDrawable(mContext, R.drawable.mode_background));
+            }
+            return v;
+        }
+
+        // Called when an item is selected
+        public void onItemSelected(int position) {
+            Log.d(TAG, "onItemSelected() " + position);
+            // Update mode list and set mode selected
+            for (int i = 0; i < mModes.size(); i++) {
+                Mode mode = mModes.get(i);
+                if (i == position) {
+                    mode.setSelected(true);
+                } else {
+                    mode.setSelected(false);
+                }
+            }
+
+            // Notify Personal Assistant app
+            final Intent intent = new Intent();
+            intent.setAction("com.ndroid.ndroidstatusbar");
+            intent.putExtra("ModeId", mModes.get(position).getId());
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            mContext.sendBroadcast(intent);
+
+            // Refresh Grid to apply background to selected item
+            notifyDataSetChanged();
+        }
+
+        public class FileHolder {
+            TextView modeTextView;
+        }
+
     }
 
 }
