@@ -1,7 +1,10 @@
 package com.ndroid.ndroidstatusbar;
 
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -43,17 +46,17 @@ public class NdroidStatusBar extends RelativeLayout {
     private Context mContext;
 
     // Dimensions
-    private int SETTINGS_HEIGHT = 900;
-    private int BAR_HEIGHT = 90;
+    private int SETTINGS_HEIGHT = 920;
+    private int BAR_HEIGHT = 80;
     private int BUTTON_MARGIN = 80;
     private int BUTTON_SIZE = 100;
-    private int ICON_SIZE = 60;
+    private int ICON_SIZE = 46;
     private int ICON_MARGIN = 7;
     private int ICON_MARGIN_END = 35;
-    private int SETTINGS_TOP_MARGIN_COLLAPSED = -900;
+    private int SETTINGS_TOP_MARGIN_COLLAPSED = -920;
     private int LAYOUT_MARGIN = 15;
     private int BAR_ICON_MARGIN = 45;
-    private int GRID_HEIGHT = 100;
+    private int GRID_HEIGHT = 400;
     private int GRID_MARGIN_START_END = 100;
 
     private int mLastTopMargin;
@@ -81,7 +84,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private int LOCATION_BUTTON_ID = 106;
     private int NFC_BUTTON_ID = 107;
     private int AIRPLANE_BUTTON_ID = 108;
-   
+
     // Function status
     private boolean mWifi = false;
     private boolean mMobileData = false;
@@ -91,7 +94,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private boolean mLocation = false;
     private boolean mNfc = false;
     private boolean mAirplane = false;
-    
+
     // Brightness
     private RelativeLayout mBrightnessLayout;
     private int mBrightnessLayoutId = 11;
@@ -116,8 +119,9 @@ public class NdroidStatusBar extends RelativeLayout {
     private RelativeLayout mModesLayout;
     private int MODES_LAYOUT_ID = 30;
     private GridView mModesGrid;
+    private ModesAdapter mModesAdapter;
     private int MODES_GRID_ID = 31;
-    private int MODES_GRID_NUM_COLUMNS = 5;
+    private int MODES_GRID_NUM_COLUMNS = 4;
     private int MODES_GRID_VERTICAL_SPACE = 10;
     private int MODES_GRID_HORIZONTAL_SPACE = 10;
 
@@ -162,9 +166,8 @@ public class NdroidStatusBar extends RelativeLayout {
     // Touch Events
     private float mStartPoint;
     private int mOffset = 0;
-    private static final int MIN_OFFSET = -900;
-    private static final int MAX_OFFSET = 900;
-
+    private static final int MIN_OFFSET = -920;
+    private static final int MAX_OFFSET = 920;
     public NdroidStatusBar(Context context) {
         super(context);
         Log.d(TAG, "NdroidStatusBar()");
@@ -197,11 +200,10 @@ public class NdroidStatusBar extends RelativeLayout {
         mContext.getContentResolver().registerContentObserver(android.provider.Settings.System.CONTENT_URI,
                 true, mVolumeObserver);
     }
-
     // Init Settings Layout
     private void initSettingsLayout() {
         mSettingsLayout = new RelativeLayout(mContext);
-        LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, SETTINGS_HEIGHT);
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, SETTINGS_HEIGHT);
         params.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
         params.topMargin = SETTINGS_TOP_MARGIN_COLLAPSED;
         mSettingsLayout.setLayoutParams(params);
@@ -217,7 +219,7 @@ public class NdroidStatusBar extends RelativeLayout {
     private void initButtonsLayout() {
         // Buttons Layout
         mButtonsLayout = new RelativeLayout(mContext);
-        RelativeLayout.LayoutParams buttonsParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        LayoutParams buttonsParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         buttonsParams.setMargins(LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN);
         buttonsParams.addRule(CENTER_HORIZONTAL, TRUE);
         mButtonsLayout.setLayoutParams(buttonsParams);
@@ -227,7 +229,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Wifi
         mWifiButton = new Button(mContext);
         mWifiButton.setId(WIFI_BUTTON_ID);
-        RelativeLayout.LayoutParams wParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams wParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         mWifiButton.setLayoutParams(wParams);
         wParams.setMarginStart(BUTTON_MARGIN);
         wParams.setMarginEnd(BUTTON_MARGIN);
@@ -239,7 +241,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Mobile Data
         mMobileDataButton = new Button(mContext);
         mMobileDataButton.setId(MOBILE_DATA_BUTTON_ID);
-        RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams mParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         mParams.setMarginStart(BUTTON_MARGIN);
         mParams.setMarginEnd(BUTTON_MARGIN);
         mParams.addRule(END_OF, WIFI_BUTTON_ID);
@@ -250,7 +252,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Ringtone
         mRingtoneButton = new Button(mContext);
         mRingtoneButton.setId(RINGTONE_BUTTON_ID);
-        RelativeLayout.LayoutParams rParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams rParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         rParams.setMarginStart(BUTTON_MARGIN);
         rParams.setMarginEnd(BUTTON_MARGIN);
         rParams.addRule(END_OF, MOBILE_DATA_BUTTON_ID);
@@ -261,7 +263,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Bluetooth
         mBluetoothButton = new Button(mContext);
         mBluetoothButton.setId(BLUETOOTH_BUTTON_ID);
-        RelativeLayout.LayoutParams bParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams bParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         bParams.setMarginStart(BUTTON_MARGIN);
         bParams.setMarginEnd(BUTTON_MARGIN);
         bParams.addRule(END_OF, RINGTONE_BUTTON_ID);
@@ -272,7 +274,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Screen Rotation
         mOrientationButton = new Button(mContext);
         mOrientationButton.setId(ORIENTATION_BUTTON_ID);
-        RelativeLayout.LayoutParams oParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams oParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         oParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
         oParams.addRule(BELOW, WIFI_BUTTON_ID);
         oParams.addRule(ALIGN_PARENT_START, TRUE);
@@ -283,7 +285,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Location
         mLocationButton = new Button(mContext);
         mLocationButton.setId(LOCATION_BUTTON_ID);
-        RelativeLayout.LayoutParams locParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams locParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         locParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
         locParams.addRule(BELOW, MOBILE_DATA_BUTTON_ID);
         locParams.addRule(END_OF, ORIENTATION_BUTTON_ID);
@@ -294,7 +296,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // NFC
         mNfcButton = new Button(mContext);
         mNfcButton.setId(NFC_BUTTON_ID);
-        RelativeLayout.LayoutParams nParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams nParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         nParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
         nParams.addRule(END_OF, LOCATION_BUTTON_ID);
         nParams.addRule(BELOW, RINGTONE_BUTTON_ID);
@@ -305,7 +307,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Airplane
         mAirplaneButton = new Button(mContext);
         mAirplaneButton.setId(AIRPLANE_BUTTON_ID);
-        RelativeLayout.LayoutParams aParams = new RelativeLayout.LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
+        LayoutParams aParams = new LayoutParams(BUTTON_SIZE, BUTTON_SIZE);
         aParams.setMargins(BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN, BUTTON_MARGIN);
         aParams.addRule(BELOW, BLUETOOTH_BUTTON_ID);
         aParams.addRule(END_OF, NFC_BUTTON_ID);
@@ -330,7 +332,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mBrightnessLayout = new RelativeLayout(mContext);
         mBrightnessLayout.setId(mBrightnessLayoutId);
         mBrightnessLayout.setBackgroundColor(Color.TRANSPARENT);
-        RelativeLayout.LayoutParams brParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        LayoutParams brParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
         brParams.addRule(BELOW, BUTTONS_LAYOUT_ID);
         brParams.setMargins(LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN);
@@ -338,7 +340,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Brightness Start Icon
         mBrightnessStart = new View(mContext);
-        RelativeLayout.LayoutParams brStartParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams brStartParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         brStartParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
         brStartParams.setMarginStart(BAR_ICON_MARGIN);
         mBrightnessStart.setLayoutParams(brStartParams);
@@ -348,7 +350,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Brightness End Icon
         mBrightnessEnd = new View(mContext);
-        RelativeLayout.LayoutParams brEndParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams brEndParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         brEndParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
         brEndParams.setMarginEnd(BAR_ICON_MARGIN);
         mBrightnessEnd.setLayoutParams(brEndParams);
@@ -361,7 +363,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mBrightnessText.setText(R.string.brightness);
         mBrightnessText.setBackgroundColor(Color.TRANSPARENT);
         mBrightnessText.setTextColor(ContextCompat.getColor(mContext, R.color.divider));
-        RelativeLayout.LayoutParams bTextParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+        LayoutParams bTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         bTextParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
         mBrightnessText.setLayoutParams(bTextParams);
@@ -369,7 +371,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Brightness SeekBar
         mBrightnessBar = new SeekBar(mContext);
-        RelativeLayout.LayoutParams barParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        LayoutParams barParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
         barParams.setMargins(ICON_MARGIN, ICON_MARGIN, ICON_MARGIN, ICON_MARGIN);
         barParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
@@ -394,7 +396,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mRingtoneLayout = new RelativeLayout(mContext);
         mRingtoneLayout.setId(mRingtoneLayoutId);
         mRingtoneLayout.setBackgroundColor(Color.TRANSPARENT);
-        RelativeLayout.LayoutParams rParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        LayoutParams rParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
         rParams.addRule(BELOW, mBrightnessLayoutId);
         rParams.setMargins(LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN, LAYOUT_MARGIN);
@@ -402,7 +404,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Ringtone Start Icon
         mRingtoneStart = new View(mContext);
-        RelativeLayout.LayoutParams rStartParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams rStartParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         rStartParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
         rStartParams.setMarginStart(BAR_ICON_MARGIN);
         mRingtoneStart.setLayoutParams(rStartParams);
@@ -412,7 +414,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Ringtone End Icon
         mRingtoneEnd = new View(mContext);
-        RelativeLayout.LayoutParams rEndParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams rEndParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         rEndParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
         rEndParams.setMarginEnd(BAR_ICON_MARGIN);
         mRingtoneEnd.setLayoutParams(rEndParams);
@@ -425,7 +427,7 @@ public class NdroidStatusBar extends RelativeLayout {
         mRingtoneText.setText(R.string.ringtone);
         mRingtoneText.setBackgroundColor(Color.TRANSPARENT);
         mRingtoneText.setTextColor(ContextCompat.getColor(mContext, R.color.divider));
-        RelativeLayout.LayoutParams rTextParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+        LayoutParams rTextParams = new LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         rTextParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
         mRingtoneText.setLayoutParams(rTextParams);
@@ -433,7 +435,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Ringtone SeekBar
         mRingtoneBar = new SeekBar(mContext);
-        RelativeLayout.LayoutParams barParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        LayoutParams barParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
         barParams.setMargins(ICON_MARGIN, ICON_MARGIN, ICON_MARGIN, ICON_MARGIN);
         barParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
@@ -455,18 +457,18 @@ public class NdroidStatusBar extends RelativeLayout {
         mModesLayout = new RelativeLayout(mContext);
         mModesLayout.setId(MODES_LAYOUT_ID);
         mModesLayout.setBackgroundColor(Color.TRANSPARENT);
-        RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        LayoutParams mParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT);
         mParams.addRule(BELOW, mRingtoneLayoutId);
         mParams.setMargins(LAYOUT_MARGIN, 0, LAYOUT_MARGIN, 0);
         mModesLayout.setLayoutParams(mParams);
 
         mModesGrid = new GridView(mContext);
-        RelativeLayout.LayoutParams gParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        LayoutParams gParams = new LayoutParams(LayoutParams.MATCH_PARENT,
                 GRID_HEIGHT);
         mModesGrid.setBackgroundColor(Color.TRANSPARENT);
         gParams.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
-        gParams.setMargins(GRID_MARGIN_START_END, ICON_MARGIN, ICON_MARGIN, GRID_MARGIN_START_END);
+        gParams.setMargins(GRID_MARGIN_START_END, 0, ICON_MARGIN, GRID_MARGIN_START_END);
         mModesGrid.setLayoutParams(gParams);
         mModesGrid.setId(MODES_GRID_ID);
         mModesLayout.addView(mModesGrid);
@@ -474,31 +476,36 @@ public class NdroidStatusBar extends RelativeLayout {
         mModesGrid.setVerticalSpacing(MODES_GRID_VERTICAL_SPACE);
         mModesGrid.setHorizontalSpacing(MODES_GRID_HORIZONTAL_SPACE);
 
-        // Modes Adapter
-        List<Mode> modes = getModes();
-        List<String> modeNames = new ArrayList<String >();
-        for (Mode m:modes) {
-            modeNames.add(m.getName());
-        }
-        final ModesAdapter adapter = new ModesAdapter(mContext, modes);
-        mModesGrid.setAdapter(adapter);
-
-        // Grid Item listener
-        mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (adapter != null) {
-                    adapter.onItemSelected(position);
+            public void run() {
+                // Modes Adapter
+                List<Mode> modes = getModes();
+                List<String> modeNames = new ArrayList<String >();
+                for (Mode m:modes) {
+                    modeNames.add(m.getName());
                 }
+                mModesAdapter = new ModesAdapter(mContext, modes);
+                mModesGrid.setAdapter(mModesAdapter);
+
+                // Grid Item listener
+                mModesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        if (mModesAdapter != null) {
+                            mModesAdapter.onItemSelected(position);
+                        }
+                    }
+                });
             }
-        });
+        }, 4000);
 
         mSettingsLayout.addView(mModesLayout);
     }
 
     // Init Status Bar Layout
     private void initIconLayout() {
-        RelativeLayout.LayoutParams iparam = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, BAR_HEIGHT);
+        LayoutParams iparam = new LayoutParams(LayoutParams.MATCH_PARENT, BAR_HEIGHT);
         iparam.addRule(RelativeLayout.BELOW, mSettingsLayoutId);
         mIconLayout = new RelativeLayout(mContext);
         mIconLayout.setLayoutParams(iparam);
@@ -508,7 +515,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Battery Level
         mBatteryView = new View(mContext);
-        mBatteryView.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+        mBatteryView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
                 mBatteryLevel));
         mBatteryView.setBackground(ContextCompat.getDrawable(mContext, R.drawable.battery_view_green));
         mIconLayout.addView(mBatteryView);
@@ -516,7 +523,7 @@ public class NdroidStatusBar extends RelativeLayout {
         // Carrier
         mCarrier = new TextView(mContext);
         mCarrier.setText(R.string.carrier);
-        RelativeLayout.LayoutParams cParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+        LayoutParams cParams = new LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         cParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         cParams.addRule(RelativeLayout.ALIGN_PARENT_START, RelativeLayout.TRUE);
@@ -524,12 +531,13 @@ public class NdroidStatusBar extends RelativeLayout {
         cParams.setMarginStart(ICON_MARGIN_END);
         mCarrier.setTextColor(ContextCompat.getColor(mContext, R.color.textColor));
         mCarrier.setBackgroundColor(Color.TRANSPARENT);
+        mCarrier.setTextSize(13);
         mIconLayout.addView(mCarrier);
 
         // Clock
         mClockText = new TextView(mContext);
         mClockText.setText("12:33");
-        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+        LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT,
                 LayoutParams.WRAP_CONTENT);
         params.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
         mClockText.setLayoutParams(params);
@@ -542,7 +550,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Ringtone
         mRingtoneIcon = new View(mContext);
-        RelativeLayout.LayoutParams rParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams rParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         rParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
         rParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         rParams.setMarginEnd(ICON_MARGIN_END);
@@ -553,7 +561,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Wifi
         mWifiIcon = new View(mContext);
-        RelativeLayout.LayoutParams wParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams wParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         wParams.addRule(RelativeLayout.START_OF, mRingtoneIconId);
         wParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         wParams.setMarginEnd(ICON_MARGIN);
@@ -564,7 +572,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Bluetooth
         mBluetoothIcon = new View(mContext);
-        RelativeLayout.LayoutParams bParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams bParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         bParams.addRule(RelativeLayout.START_OF, mWifiIconId);
         bParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         bParams.setMarginEnd(ICON_MARGIN);
@@ -575,7 +583,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Mobile Data
         mMobileDataIcon = new View(mContext);
-        RelativeLayout.LayoutParams mParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams mParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         mParams.addRule(RelativeLayout.START_OF, mBluetoothIconId);
         mParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         mParams.setMarginEnd(ICON_MARGIN);
@@ -586,7 +594,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Screen Rotation
         mOrientationIcon = new View(mContext);
-        RelativeLayout.LayoutParams oParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams oParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         oParams.addRule(RelativeLayout.START_OF, mMobileDataIconId);
         oParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         oParams.setMarginEnd(ICON_MARGIN);
@@ -597,7 +605,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Location
         mLocationIcon = new View(mContext);
-        RelativeLayout.LayoutParams lParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams lParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         lParams.addRule(RelativeLayout.START_OF, mOrientationIconId);
         lParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         lParams.setMarginEnd(ICON_MARGIN);
@@ -608,7 +616,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Nfc
         mNfcIcon = new View(mContext);
-        RelativeLayout.LayoutParams nParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams nParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         nParams.addRule(RelativeLayout.START_OF, mLocationIconId);
         nParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         nParams.setMarginEnd(ICON_MARGIN);
@@ -619,7 +627,7 @@ public class NdroidStatusBar extends RelativeLayout {
 
         // Airplane Mode
         mAirplaneIcon = new View(mContext);
-        RelativeLayout.LayoutParams aParams = new RelativeLayout.LayoutParams(ICON_SIZE, ICON_SIZE);
+        LayoutParams aParams = new LayoutParams(ICON_SIZE, ICON_SIZE);
         aParams.addRule(RelativeLayout.START_OF, mNfcIconId);
         aParams.addRule(RelativeLayout.CENTER_VERTICAL, RelativeLayout.TRUE);
         aParams.setMarginEnd(ICON_MARGIN);
@@ -648,13 +656,13 @@ public class NdroidStatusBar extends RelativeLayout {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                RelativeLayout.LayoutParams par = (RelativeLayout.LayoutParams)
+                LayoutParams par = (LayoutParams)
                         mSettingsLayout.getLayoutParams();
                 mLastTopMargin = par.topMargin;
                 mStartPoint = event.getY();
                 break;
             case MotionEvent.ACTION_UP:
-                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+                LayoutParams params = (LayoutParams)
                         mSettingsLayout.getLayoutParams();
                 int margin = params.topMargin;
 
@@ -694,7 +702,7 @@ public class NdroidStatusBar extends RelativeLayout {
      * @param offset
      */
     private void updateLayoutOffset(int offset) {
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+        LayoutParams params = (LayoutParams)
                 mSettingsLayout.getLayoutParams();
 
         int topMargin = mLastTopMargin;
@@ -713,7 +721,7 @@ public class NdroidStatusBar extends RelativeLayout {
      * Expand Status Bar and show Settings.
      */
     private void expandStatusBar() {
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+        LayoutParams params = (LayoutParams)
                 mSettingsLayout.getLayoutParams();
         params.topMargin = 0;
         mSettingsLayout.setLayoutParams(params);
@@ -723,7 +731,7 @@ public class NdroidStatusBar extends RelativeLayout {
      * Collapse Status bar and hide Settings.
      */
     private void collapseStatusBar() {
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)
+        LayoutParams params = (LayoutParams)
                 mSettingsLayout.getLayoutParams();
         params.topMargin = SETTINGS_TOP_MARGIN_COLLAPSED;
         mSettingsLayout.setLayoutParams(params);
@@ -765,22 +773,7 @@ public class NdroidStatusBar extends RelativeLayout {
                 }
 
                 mIconLayout.removeView(mRingtoneIcon);
-                switch (mRingtone) {
-                    case ON:
-                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
-                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
-                        break;
-                    case OFF:
-                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
-                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
-                        break;
-                    case VIBRATE:
-                        mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
-                        mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_vibrate));
-                        break;
-                    default:
-                        break;
-                }
+                setRingtoneUI(mRingtone);
                 mIconLayout.addView(mRingtoneIcon);
             }
         });
@@ -858,6 +851,7 @@ public class NdroidStatusBar extends RelativeLayout {
                     case 0:
                         mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
                         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+                        break;
                     default:
                         mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
                         mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_up));
@@ -943,8 +937,9 @@ public class NdroidStatusBar extends RelativeLayout {
     }
 
 
-    private void setRingtone(int type) {
+    private void setRingtoneUI(int type) {
         Log.d(TAG, "setRingtone() " + type);
+
         switch (type) {
             case ON:
                 mRingtoneBar.setProgress(7);
@@ -955,6 +950,7 @@ public class NdroidStatusBar extends RelativeLayout {
                 mRingtoneBar.setProgress(0);
                 mRingtoneIcon.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
                 mRingtoneButton.setBackground(ContextCompat.getDrawable(mContext, R.drawable.ic_volume_off));
+
                 break;
             case VIBRATE:
                 mRingtoneBar.setProgress(0);
@@ -1024,9 +1020,10 @@ public class NdroidStatusBar extends RelativeLayout {
         @Override
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
-            Log.d(TAG, "onChange() Ringtone");
             AudioManager audio = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-            mRingtoneBar.setProgress(audio.getStreamVolume(AudioManager.STREAM_RING));
+            int volume = audio.getStreamVolume(AudioManager.STREAM_RING);
+            Log.d(TAG, "onChange() Ringtone " + volume);
+            mRingtoneBar.setProgress(volume);
         }
     }
 
@@ -1041,9 +1038,9 @@ public class NdroidStatusBar extends RelativeLayout {
         Uri modes = Uri.parse(URL);
 
         Cursor cursor = mContext.getContentResolver().query(modes, null, null, null, null);
-
         List<Mode> modeList = new ArrayList<Mode>();
         if (cursor != null) {
+            Log.d(TAG, "Cursor count " +cursor.getCount());
             cursor.moveToFirst();
             while (cursor.isAfterLast() == false) {
                 int id = cursor.getInt(0);
@@ -1085,7 +1082,12 @@ public class NdroidStatusBar extends RelativeLayout {
                 modeList.add(m);
                 cursor.moveToNext();
             }
+        } else {
+            Log.e(TAG, "Cursor is null");
         }
+
+        cursor.close();
+
         return modeList;
     }
 
@@ -1182,7 +1184,7 @@ public class NdroidStatusBar extends RelativeLayout {
         Log.d(TAG, "setMode() : " + mode);
         setWifi(mode.isWifi());
         setBluetooth(mode.isBluetooth());
-        setRingtone(mode.getRingtone());
+        setRingtoneUI(mode.getRingtone());
         setBrightness(mode.getBrightness(), false);
     }
 
@@ -1214,7 +1216,7 @@ public class NdroidStatusBar extends RelativeLayout {
             if (convertView == null) {
                 LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 v = inflater.inflate(R.layout.mode_grid_item, null);
-                holder.modeTextView = v.findViewById(R.id.modeTextView);
+                holder.modeTextView = (TextView) v.findViewById(R.id.modeTextView);
                 v.setTag(holder);
             } else {
                 holder = (FileHolder) v.getTag();
@@ -1256,10 +1258,46 @@ public class NdroidStatusBar extends RelativeLayout {
             notifyDataSetChanged();
         }
 
+        public Mode onModeSelected(int modeId) {
+
+            Mode selected = null;
+
+            for (Mode mode :mModes) {
+                if (modeId == mode.getId()) {
+                    mode.setSelected(true);
+                    selected = mode;
+                } else {
+                    mode.setSelected(false);
+                }
+            }
+
+            setMode(selected);
+            notifyDataSetChanged();
+            return selected;
+        }
+
         public class FileHolder {
             TextView modeTextView;
         }
 
     }
 
+    private void registerModerReceiver() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.ndroid.personalassistant");
+        mContext.registerReceiver(mModeReceiver, filter);
+    }
+
+    private BroadcastReceiver mModeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int id = intent.getIntExtra("ModeId", 0);
+            if (id != 0) {
+                if (mModesAdapter != null) {
+                    Mode mode = mModesAdapter.onModeSelected(id);
+                    Toast.makeText(context, mode.name + " mode selected.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    };
 }
